@@ -1,8 +1,8 @@
 /*
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-17 14:19:52
- * @LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
- * @LastEditTime: 2025-03-25 11:16:24
+ * @LastEditors: FirstsnowLucky firstsnow1119@163.com
+ * @LastEditTime: 2025-04-08 14:24:55
  * @FilePath: \canvas\index.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -22,6 +22,8 @@ class Index {
         this.player = null; // 玩家
         this.enemies = []; // 敌人
         this.keys = {}; // 记录按键状态
+        this.backgroundX = 0; // 添加背景位置追踪
+        this.backgroundSpeed = 2; // 背景滚动速度
         this.init();
     }
 
@@ -74,7 +76,31 @@ class Index {
      */
     gameLoop() {
         this.drawer.clearCanvas();
-        if (this.backgroundImage) this.ctx.drawImage(this.backgroundImage, 0, 0, this.canvas.width, this.canvas.height);
+        
+        // 更新背景位置
+        this.backgroundX -= this.backgroundSpeed;
+        
+        // 使用单张图片实现无限滚动
+        if (this.backgroundImage) {
+            // 绘制背景
+            this.ctx.drawImage(
+                this.backgroundImage, 
+                this.backgroundX, 0, 
+                this.backgroundImage.width, this.canvas.height
+            );
+            
+            // 绘制第二部分以填充右侧
+            this.ctx.drawImage(
+                this.backgroundImage, 
+                this.backgroundX + this.backgroundImage.width, 0, 
+                this.backgroundImage.width, this.canvas.height
+            );
+            
+            // 当第一张图完全移出视野时重置位置
+            if (this.backgroundX <= -this.backgroundImage.width) {
+                this.backgroundX = 0;
+            }
+        }
 
         this.player.update(this.canvas.width, this.canvas.height);
         this.player.draw(this.ctx);

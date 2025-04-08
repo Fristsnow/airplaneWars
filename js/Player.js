@@ -28,7 +28,7 @@ export class Player extends GameElement {
         ctx.save();
         ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
         ctx.rotate(this.angle);
-        ctx.drawImage(this.image, -this.height / 2, -this.width / 2, this.height, this.width);
+        ctx.drawImage(this.image, -this.height / 2, -this.width / 2, this.height * 2, this.width);
         ctx.restore();
 
         // 绘制子弹

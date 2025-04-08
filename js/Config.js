@@ -1,8 +1,16 @@
-export const BG_IMAGE_SRC = './img/bg.png';
+/*
+ * @Author: FirstsnowLucky firstsnow1119@163.com
+ * @Date: 2025-03-19 09:18:32
+ * @LastEditors: FirstsnowLucky firstsnow1119@163.com
+ * @LastEditTime: 2025-04-08 14:34:28
+ * @FilePath: \airplaneWars\js\Config.js
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ */
+export const BG_IMAGE_SRC = './img/backgrounds/black.jpg';
 
-export const PLAYER_IMAGE_SRC = './img/player.png';
+export const PLAYER_IMAGE_SRC = './img/mine/mine.png';
 
-export const ENEMY_IMAGE_SRC = './img/enemy.png';
+export const ENEMY_IMAGE_SRC = './img/ships/ship_1.png';
 
 export const BULLET_IMAGE_SRC = './img/playerBullet.png';
 
@@ -19,7 +27,11 @@ export const ENEMY = {
     height: 40,
     speedX: -3,
     speedY: 0,
-    score: 100
+    score: 100,
+    spriteWidth: 80,
+    spriteHeight: 80,
+    frames: 4,
+    frameDelay: 40
 }
 
 export const PLAYER = {
