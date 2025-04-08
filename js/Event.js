@@ -2,7 +2,7 @@
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-19 15:26:35
  * @LastEditors: FirstsnowLucky firstsnow1119@163.com
- * @LastEditTime: 2025-04-08 17:11:49
+ * @LastEditTime: 2025-04-08 17:32:35
  * @FilePath: \canvas\Event.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -23,6 +23,7 @@ export class Event {
         };
         this.clones = [];
         this.walls = [];
+        this.gameLoop = null; // 添加游戏循环引用
     }
 
     handleEnemyCollisionPlayer(player, enemy, flag) {
@@ -33,7 +34,7 @@ export class Event {
             // 玩家被敌人击中，减少生命值
             player.life -= 1;
             if (player.life <= 0) {
-                this.overGame(); // 如果生命值为0，游戏结束
+                this.overGame(player); // 如果生命值为0，游戏结束
             }
         }
         return {
@@ -42,8 +43,96 @@ export class Event {
         };
     }
 
-    overGame() {
-        console.log("Game Over");
+    overGame(player) {
+        // 停止游戏循环
+        if (window.gameLoop) {
+            cancelAnimationFrame(window.gameLoop);
+            window.gameLoop = null;
+        }
+    
+        const gameOverScreen = document.querySelector('.game-over');
+        const finalScoreSpan = document.querySelector('.final-score');
+        const playerNameInput = document.getElementById('player-name');
+        const submitButton = document.querySelector('.submit-score');
+        const leaderboardScreen = document.querySelector('.leaderboard');
+        const scoresList = document.querySelector('.scores-list');
+        const restartButton = document.querySelector('.restart-game');
+    
+        // 显示游戏结束界面
+        gameOverScreen.style.display = 'flex';
+        finalScoreSpan.textContent = player.score;
+    
+        // 处理提交分数
+        submitButton.onclick = () => {
+            const playerName = playerNameInput.value.trim();
+            if (playerName) {
+                this.saveScore(playerName, player.score);
+                gameOverScreen.style.display = 'none';
+                this.showLeaderboard();
+                
+                // 确保游戏循环被销毁
+                if (window.gameLoop) {
+                    cancelAnimationFrame(window.gameLoop);
+                    window.gameLoop = null;
+                }
+            }
+        };
+    
+        // 处理重新开始游戏
+        restartButton.onclick = () => {
+            leaderboardScreen.style.display = 'none';
+            location.reload();
+        };
+    }
+
+    saveScore(name, score) {
+        // 获取现有分数
+        let scores = JSON.parse(localStorage.getItem('gameScores')) || [];
+        
+        // 添加新分数
+        scores.push({ name, score, date: new Date().toISOString() });
+        
+        // 按分数排序
+        scores.sort((a, b) => b.score - a.score);
+        
+        // 只保留前10名
+        scores = scores.slice(0, 10);
+        
+        // 保存到本地存储
+        localStorage.setItem('gameScores', JSON.stringify(scores));
+    }
+
+    showLeaderboard() {
+        const leaderboardScreen = document.querySelector('.leaderboard');
+        const scoresList = document.querySelector('.scores-list');
+        const canvas = document.querySelector('#canvas');
+        
+        // 获取分数
+        const scores = JSON.parse(localStorage.getItem('gameScores')) || [];
+        
+        // 清空现有列表
+        scoresList.innerHTML = '';
+        
+        // 添加分数项
+        scores.forEach((score, index) => {
+            const scoreItem = document.createElement('div');
+            scoreItem.className = 'score-item';
+            scoreItem.innerHTML = `
+                <span class="score-rank">#${index + 1}</span>
+                <span class="score-name">${score.name}</span>
+                <span class="score-value">${score.score}</span>
+            `;
+            scoresList.appendChild(scoreItem);
+        });
+        
+        // 隐藏 canvas
+        canvas.style.display = 'none';
+        
+        // 显示排行榜并添加动画类
+        leaderboardScreen.style.display = 'flex';
+        setTimeout(() => {
+            leaderboardScreen.classList.add('show');
+        }, 10);
     }
 
     /**
@@ -373,43 +462,46 @@ export class Event {
                 // 检测子弹是否出界
                 if (bullet.isOutOfBounds(canvas.width, canvas.height)) {
                     enemy.bullets.splice(index, 1);
-                    return
+                    return;
                 }
 
                 // 检测子弹是否击中玩家
                 if (this.utils.checkCollision(bullet, player)) {
                     enemy.bullets.splice(index, 1);
                     // 玩家受伤逻辑
-                    const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, false)
-                    console.log(life, score, 'life', 'score')
-                    player.life = life <= 0 ? this.overGame() : life;
-                    player.scope = score;
+                    const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, false);
+                    if (life <= 0) {
+                        this.overGame(player);
+                        return;
+                    }
+                    player.life = life;
+                    player.score = score;
                 }
             });
-        }
+        };
 
         enemies.forEach((enemy, index) => {
             enemy.update();
             enemy.draw(ctx);
-            enemyBullets(enemy)
+            enemyBullets(enemy);
 
             // 检测敌机是否超出左侧边界
             if (enemy.isOutOfBoundsLeft()) {
                 enemies.splice(index, 1);
+                return;
             }
 
             if (enemy.checkCollision(player)) {
-                this.createExplosion(
-                    enemy.x, // 使用敌人的位置
-                    enemy.y,
-                    enemy.width, // 传递敌人的宽度
-                    enemy.height // 传递敌人的高度
-                );
+                this.createExplosion(enemy.x, enemy.y, enemy.width, enemy.height);
                 enemies.splice(index, 1);
-                const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, true)
-                player.life = life <= 0 ? this.overGame() : life;
-                player.scope = score;
+                const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, false);
+                if (life <= 0) {
+                    this.overGame(player);
+                    return;
+                }
+                player.life = life;
+                player.score = score;
             }
-        })
+        });
     }
 }
