@@ -16,9 +16,15 @@ export class Enemy extends GameElement {
         this.shootDelay = 2000;
         this.lastEnemyShotTime = 0;
         this.ctx = ctx;
-        // 添加动画相关属性
         this.currentFrame = 0;
         this.frameTimer = 0;
+        
+        // 添加活动范围限制
+        this.topBoundary = 80;  // 状态栏高度
+        this.bottomBoundary = this.ctx.canvas.height - 70;  // 技能栏高度
+        
+        // 确保初始位置在有效范围内
+        this.y = Math.min(Math.max(y, this.topBoundary), this.bottomBoundary - this.height);
     }
 
     draw(ctx) {
@@ -43,6 +49,13 @@ export class Enemy extends GameElement {
         if (this.frameTimer >= ENEMY.frameDelay) {
             this.currentFrame = (this.currentFrame + 1) % ENEMY.frames;
             this.frameTimer = 0;
+        }
+
+        // 确保敌人在移动时不会进入禁止区域
+        if (this.y < this.topBoundary) {
+            this.y = this.topBoundary;
+        } else if (this.y > this.bottomBoundary - this.height) {
+            this.y = this.bottomBoundary - this.height;
         }
 
         super.update(this.ctx);

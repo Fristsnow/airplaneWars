@@ -20,6 +20,12 @@ export class Player extends GameElement {
         this.bullets = []; // 玩家子弹数组
         this.shotDelay = 300; // 射击冷却时间(ms)
         this.event = new Event();
+        this.topBoundary = 80;  // 状态栏高度
+        this.bottomBoundary = window.innerHeight - 100;  // 技能栏高度
+        this.y = Math.min(Math.max(y, this.topBoundary), this.bottomBoundary - this.height);
+        this.bulletEnhanced = false;  // 添加这行
+        this.bulletColumns = 1;
+        this.bulletSpread = 0;
     }
 
     /**
@@ -41,19 +47,32 @@ export class Player extends GameElement {
         const now = Date.now();
         if (now - this.lastShotTime > this.delay) {
             this.lastShotTime = now;
-
-            // 确保子弹从玩家的中心发射
-            const bulletX = this.x + this.width / 2 - 2.5; // 计算子弹的X坐标
-            const bulletY = this.y + this.height / 2 - 2.5; // 计算子弹的Y坐标
-
-            // 子弹方向向上
-            const direction = { x: 1, y: 0 }; // 向右发射
-
-            this.bullets.push(new Bullet(
-                bulletX, bulletY,
-                5, 5,
-                5, direction,
-            ));
+    
+            // 计算子弹的基础位置（从飞机前端发射）
+            const bulletX = this.x + this.width;
+            const bulletY = this.y + this.height / 2;
+            const direction = { x: 1, y: 0 };
+    
+            // 根据强化状态决定发射的子弹数量和属性
+            const columns = this.bulletEnhanced ? 5 : 1;
+            const spread = this.bulletEnhanced ? 30 : 0;
+            const bulletWidth = this.bulletEnhanced ? 20 : 5;
+            const bulletSpeed = this.bulletEnhanced ? 10 : 5;
+    
+            // 计算多列子弹的位置
+            for (let i = 0; i < columns; i++) {
+                const offsetY = (i - (columns - 1) / 2) * spread;
+                const bullet = new Bullet(
+                    bulletX,
+                    bulletY + offsetY,
+                    bulletWidth,
+                    5,
+                    bulletSpeed,
+                    direction
+                );
+                bullet.active = true;  // 确保子弹是激活状态
+                this.bullets.push(bullet);
+            }
             return true;
         }
         return false;
@@ -65,18 +84,19 @@ export class Player extends GameElement {
     update(canvasWidth, canvasHeight) {
         this.x += this.vx;
         this.y += this.vy;
-
-        // 边缘检测
+    
+        // 边缘检测，包括状态栏和技能栏限制
         this.x = Math.max(0, Math.min(canvasWidth - this.width, this.x));
-        this.y = Math.max(0, Math.min(canvasHeight - this.height, this.y));
-
-        // 更新子弹
-        this.bullets.forEach((bullet, index) => {
+        this.y = Math.max(this.topBoundary, Math.min(this.bottomBoundary - this.height, this.y));
+    
+        // 更新子弹 - 使用 for 循环从后向前遍历
+        for (let i = this.bullets.length - 1; i >= 0; i--) {
+            const bullet = this.bullets[i];
             bullet.update();
             if (bullet.isOutOfBounds(canvasHeight)) {
-                this.bullets.splice(index, 1);
+                this.bullets.splice(i, 1);
             }
-        });
+        }
     }
 
     /**

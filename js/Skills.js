@@ -2,7 +2,7 @@
  * @Author: FirstsnowLucky firstsnow1119@163.com
  * @Date: 2025-04-08 15:14:07
  * @LastEditors: FirstsnowLucky firstsnow1119@163.com
- * @LastEditTime: 2025-04-08 15:14:12
+ * @LastEditTime: 2025-04-08 16:37:01
  * @FilePath: \airplaneWars\js\Skills.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -15,7 +15,7 @@ export class Skills {
         this.skillImages = [];
         this.cooldowns = {
             q: { duration: 10000, lastUsed: 0 },
-            w: { duration: 15000, lastUsed: 0 },
+            z: { duration: 15000, lastUsed: 0 },
             e: { duration: 8000, lastUsed: 0 },
             r: { duration: 12000, lastUsed: 0 }
         };

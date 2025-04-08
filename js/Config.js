@@ -25,7 +25,7 @@ export const EXPLOSION_IMAGE_SRC = [
 export const PLAYER_SKILL_IMAGE_SRC = [
     {
         name: '分身',
-        key: 'w',
+        key: 'z',
         width: 70,
         height: 70,
         src: './img/other/1.png'

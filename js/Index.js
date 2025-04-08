@@ -2,7 +2,7 @@
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-17 14:19:52
  * @LastEditors: FirstsnowLucky firstsnow1119@163.com
- * @LastEditTime: 2025-04-08 15:14:27
+ * @LastEditTime: 2025-04-08 16:13:41
  * @FilePath: \canvas\index.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -72,8 +72,14 @@ class Index {
     }
 
     async spawnEnemy() {
-        const y = Math.random() * (this.canvas.height - 40); // 随机Y坐标
-        const enemy = new Enemy(this.canvas.width, y, this.ctx, ENEMY); // 确保传递 domConfig
+        const statusBarHeight = 80;
+        const skillBarHeight = 70;
+        const availableHeight = this.canvas.height - statusBarHeight - skillBarHeight;
+        
+        // 在有效范围内随机生成敌人的Y坐标
+        const y = statusBarHeight + Math.random() * availableHeight;
+        
+        const enemy = new Enemy(this.canvas.width, y, this.ctx, ENEMY);
         this.enemies.push(enemy);
 
         // 每隔一段时间创建新的敌机
@@ -111,11 +117,16 @@ class Index {
             }
         }
 
+        // 更新和渲染游戏元素
+        this.event.renderSkillEffects(this.ctx, this.player);  // 添加这行，传入 player
+        this.event.updateEnemies(this.ctx, this.canvas, this.enemies, this.player);
+        this.event.updateExplosions(this.ctx);
+        
         this.player.update(this.canvas.width, this.canvas.height);
         this.player.draw(this.ctx);
 
         // 玩家子弹的碰撞事件
-        this.event.checkBulletCollisions(this.enemies, this.player)
+        this.event.checkBulletCollisions(this.enemies, this.player);
 
         // 更新敌人和子弹
         this.event.updateEnemies(this.ctx, this.canvas, this.enemies, this.player);
@@ -125,6 +136,9 @@ class Index {
         this.skills.draw();
         this.statusBar.draw(this.player)
 
+        // 绘制技能UI
+        this.event.drawSkillUI(this.ctx);
+        
         requestAnimationFrame(() => this.gameLoop());
     }
 

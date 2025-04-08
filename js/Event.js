@@ -2,12 +2,13 @@
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-19 15:26:35
  * @LastEditors: FirstsnowLucky firstsnow1119@163.com
- * @LastEditTime: 2025-04-08 15:35:16
+ * @LastEditTime: 2025-04-08 17:11:49
  * @FilePath: \canvas\Event.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 import { Utils } from "./Utils.js";
 import { Explosion } from './Explosion.js';
+import { Bullet } from './Bullet.js';  // 添加这行
 
 export class Event {
 
@@ -15,10 +16,10 @@ export class Event {
         this.utils = new Utils()
         this.explosions = []; // 存储爆炸效果
         this.skills = {
-            q: { cooldown: 10000, lastUsed: 0, name: '墙壁销毁', progress: 0 },
-            w: { cooldown: 15000, lastUsed: 0, name: '分身', progress: 0 },
-            e: { cooldown: 8000, lastUsed: 0, name: '恢复血量', progress: 0 },
-            r: { cooldown: 12000, lastUsed: 0, name: '子弹强化', progress: 0 }
+            q: { cooldown: 0, lastUsed: 0, name: '墙壁销毁', progress: 0 },
+            z: { cooldown: 0, lastUsed: 0, name: '分身', progress: 0 },
+            e: { cooldown: 0, lastUsed: 0, name: '恢复血量', progress: 0 },
+            r: { cooldown: 0, lastUsed: 0, name: '子弹强化', progress: 0 }
         };
         this.clones = [];
         this.walls = [];
@@ -27,7 +28,7 @@ export class Event {
     handleEnemyCollisionPlayer(player, enemy, flag) {
         if (flag) {
             // 玩家击败敌人，增加分数
-            player.score += enemy.score; // 假设 enemy 对象有 score 属性
+            player.score += enemy.score;
         } else {
             // 玩家被敌人击中，减少生命值
             player.life -= 1;
@@ -53,32 +54,42 @@ export class Event {
      */
     handleKeyDown(e, keys, player) {
         keys[e.key] = true;
-        debugger
+        
         // 处理技能按键
-        if (['q', 'w', 'e', 'r'].includes(e.key.toLowerCase())) {
+        if (['q', 'z', 'e', 'r'].includes(e.key.toLowerCase())) {
             this.handleSkill(e.key.toLowerCase(), player);
         }
-        // 处理射击
-        else if (e.key === ' ') {
+        
+        // 处理移动和射击
+        this.updatePlayerVelocity(player, keys);
+        this.updateShooting(player, keys);
+    }
+
+    handleKeyUp(e, keys, player) {
+        keys[e.key] = false;
+        this.updatePlayerVelocity(player, keys);
+    }
+
+    // 新增射击更新方法
+    updateShooting(player, keys) {
+        if (keys[' ']) {
             player.shoot();
         }
-        // 处理移动
-        this.updatePlayerVelocity(player, keys);
     }
 
     handleSkill(key, player) {
         const now = Date.now();
         const skill = this.skills[key];
-        
+
         if (skill && now - skill.lastUsed >= skill.cooldown) {
             skill.lastUsed = now;
             skill.progress = 1; // 设置冷却进度
-            
-            switch(key) {
+
+            switch (key) {
                 case 'q':
                     this.createWall(player);
                     break;
-                case 'w':
+                case 'z':
                     this.createClone(player);
                     break;
                 case 'e':
@@ -120,7 +131,7 @@ export class Event {
                     ctx.font = '20px Arial';
                     ctx.textAlign = 'center';
                     const remainingSeconds = Math.ceil((skill.cooldown - elapsed) / 1000);
-                    ctx.fillText(remainingSeconds, startX + skillSize/2, startY + skillSize/2);
+                    ctx.fillText(remainingSeconds, startX + skillSize / 2, startY + skillSize / 2);
                 }
             }
 
@@ -137,38 +148,101 @@ export class Event {
     }
 
     enhanceBullets(player) {
-        // 实现子弹强化逻辑
         player.bulletEnhanced = true;
+        player.bulletColumns = 5;  // 设置子弹列数
+        player.bulletSpread = 20;  // 子弹之间的间距
+
         setTimeout(() => {
             player.bulletEnhanced = false;
-        }, 5000); // 持续5秒
+            player.bulletColumns = 1;  // 恢复默认列数
+            player.bulletSpread = 0;   // 恢复默认间距
+        }, 20000); // 持续20秒
     }
 
     createWall(player) {
         this.walls.push({
-            x: player.x + player.width + 50,
-            y: 0,
+            x: 0,
+            y: 80,
             width: 20,
-            height: window.innerHeight,
+            height: window.innerHeight - 150,
             speed: 5
         });
     }
 
     createClone(player) {
-        const clone = {
-            x: player.x + 50,
-            y: player.y,
+        // 上方分身
+        const clone1 = {
+            x: player.x,
+            y: player.y - 60,
             width: player.width,
             height: player.height,
             image: player.image,
             created: Date.now(),
-            duration: 5000
+            duration: 8000,  // 增加持续时间
+            offset: -60,
+            lastShot: 0,
+            shootDelay: 100  // 减少射击间隔
         };
-        this.clones.push(clone);
+
+        // 下方分身
+        const clone2 = {
+            x: player.x,
+            y: player.y + 60,
+            width: player.width,
+            height: player.height,
+            image: player.image,
+            created: Date.now(),
+            duration: 8000,  // 增加持续时间
+            offset: 60,
+            lastShot: 0,
+            shootDelay: 100  // 减少射击间隔
+        };
+
+        this.clones.push(clone1, clone2);
+    }
+
+    renderSkillEffects(ctx, player) {
+        // 先渲染墙壁
+        this.walls = this.walls.filter(wall => {
+            wall.x += wall.speed;
+            ctx.fillStyle = 'rgba(0, 150, 255, 0.6)';
+            ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+            return wall.x < ctx.canvas.width;
+        });
+
+        // 渲染分身
+        this.clones = this.clones.filter(clone => {
+            const now = Date.now();
+            if (now - clone.created < clone.duration) {
+                clone.x = player.x;
+                clone.y = player.y + clone.offset;
+
+                // 分身自动射击
+                if (now - clone.lastShot > clone.shootDelay) {
+                    clone.lastShot = now;
+                    const bullet = new Bullet(
+                        clone.x + clone.width,  // x位置
+                        clone.y + clone.height / 2,  // y位置
+                        35,  // 宽度
+                        5,   // 高度
+                        20,  // 速度
+                        { x: 1, y: 0 }  // 向右射击的方向
+                    );
+                    player.bullets.push(bullet);
+                }
+
+                ctx.save();
+                ctx.globalAlpha = 0.5;
+                ctx.drawImage(clone.image, clone.x, clone.y, clone.width, clone.height);
+                ctx.restore();
+                return true;
+            }
+            return false;
+        });
     }
 
     heal(player) {
-        player.life = Math.min(3, player.life + 1);
+        player.life = Math.min(6, player.life + 1);
     }
 
 
@@ -219,13 +293,25 @@ export class Event {
     }
 
     checkBulletCollisions(enemies, player) {
-        enemies.forEach((enemy, enemyIndex) => {
-            player.bullets.forEach((bullet, bulletIndex) => {
+        // 从后向前遍历敌人数组
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const enemy = enemies[i];
+            // 从后向前遍历子弹数组
+            for (let j = player.bullets.length - 1; j >= 0; j--) {
+                const bullet = player.bullets[j];
                 if (bullet.checkCollision(enemy)) {
-                    this.handleCollision(player, enemies, enemyIndex, bulletIndex);
+                    // 移除子弹
+                    bullet.active = false;
+                    player.bullets.splice(j, 1);
+
+                    // 移除敌人并创建爆炸效果
+                    this.createExplosion(enemy.x, enemy.y, enemy.width, enemy.height);
+                    enemies.splice(i, 1);
+                    player.score += enemy.score;
+                    break; // 一个敌人被击中后就跳出内层循环
                 }
-            });
-        });
+            }
+        }
     }
 
     handleCollision(player, enemies, enemyIndex, bulletIndex) {
@@ -259,12 +345,25 @@ export class Event {
         this.explosions.forEach((explosion, index) => {
             explosion.draw(ctx);
             if (explosion.isFinished()) {
-                this.explosions.splice(index, 1); // 移除已完成的爆炸效果
+                this.explosions.splice(index, 1);
             }
         });
     }
 
     updateEnemies(ctx, canvas, enemies, player) {
+        this.walls.forEach(wall => {
+            enemies.forEach((enemy, index) => {
+                if (enemy.x < wall.x + wall.width &&
+                    enemy.x + enemy.width > wall.x &&
+                    enemy.y < wall.y + wall.height &&
+                    enemy.y + enemy.height > wall.y) {
+                    // 敌人碰到墙壁时被消灭
+                    this.createExplosion(enemy.x, enemy.y, enemy.width, enemy.height);
+                    enemies.splice(index, 1);
+                    player.score += enemy.score;
+                }
+            });
+        });
 
         const enemyBullets = (enemy) => {
             enemy.bullets.forEach((bullet, index) => {
