@@ -27,7 +27,7 @@ export class Explosion {
         const elapsed = Date.now() - this.startTime;
         if (elapsed < this.duration) {
             const index = Math.floor(elapsed / (this.duration / this.images.length));
-            ctx.drawImage(this.images[index], this.x, this.y, this.width, this.height); // 使用指定的宽度和高度绘制爆炸
+            ctx.drawImage(this.images[index], this.x, this.y, this.width, this.height);
         }
     }
 

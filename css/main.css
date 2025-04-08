@@ -13,3 +13,166 @@ canvas {
     display: none;
 }
 
+.main-page {
+    width: 100vw;
+    height: 100vh;
+    background: url('../img/backgrounds/black.jpg') center/cover;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 40px;
+    box-sizing: border-box;
+    background-position: 0;
+    position: relative;
+    background-size: 200%;
+    animation: bg 50s linear infinite;
+}
+
+@keyframes bg {
+    to {
+        background-position: 1000% 0;
+    }
+}
+
+.main-page-text {
+    flex: 0 0 60%;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 30px;
+    border-radius: 10px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.main-page-text ul {
+    list-style: none;
+    padding: 0;
+}
+
+.main-page-text li {
+    margin: 15px 0;
+    font-size: 16px;
+    line-height: 1.6;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.main-page-logo {
+    flex: 0 0 35%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+}
+
+.main-page-logo img {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+}
+
+.main-btn {
+    padding: 15px 50px;
+    font-size: 24px;
+    background: linear-gradient(45deg, #ff4d4d, #ff0000);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+}
+
+.main-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+}
+
+/* 自定义滚动条样式 */
+.main-page-text::-webkit-scrollbar {
+    width: 8px;
+}
+
+.main-page-text::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.main-page-text::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.main-page-text::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+.game-ui {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    color: white;
+    font-size: 18px;
+    z-index: 1000; /* 确保 UI 在最上层 */
+    pointer-events: none; /* 允许点击穿透到 canvas */
+}
+
+.player-info {
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* 添加文字阴影提高可读性 */
+}
+
+.skills {
+    display: flex;
+    gap: 10px;
+}
+
+.skill {
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden; /* 添加此行确保冷却动画不会溢出 */
+}
+
+.cooldown {
+    position: absolute;
+    bottom: 0;
+    left: 0; /* 添加此行确保位置正确 */
+    width: 100%;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    transition: height 0.3s linear;
+    z-index: 1; /* 确保冷却效果在技能图标上层 */
+}
+
+.key {
+    position: relative;
+    z-index: 2; /* 确保文字在冷却效果上层 */
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.cooldown {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    background: rgba(255, 255, 255, 0.3);
+    transition: height 0.1s linear;
+}
+
+#canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+

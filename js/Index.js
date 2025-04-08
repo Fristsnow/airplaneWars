@@ -2,7 +2,7 @@
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-17 14:19:52
  * @LastEditors: FirstsnowLucky firstsnow1119@163.com
- * @LastEditTime: 2025-04-08 14:24:55
+ * @LastEditTime: 2025-04-08 15:14:27
  * @FilePath: \canvas\index.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
@@ -11,10 +11,17 @@ import {Player} from "./Player.js"
 import {BG_IMAGE_SRC, PLAYER_IMAGE_SRC, ENEMY} from './Config.js'
 import {Event} from './Event.js'
 import {Enemy} from "./Enemy.js"
+import {Skills} from './Skills.js';
+import {StatusBar} from './StatusBar.js'
 
 class Index {
     constructor() {
+        this.mainPage = document.querySelector('.main-page');
         this.canvas = document.getElementById("canvas");
+        this.startBtn = document.querySelector('.main-btn');
+        
+        // 绑定开始游戏事件
+        this.startBtn.addEventListener('click', () => this.startGame());
         this.ctx = this.canvas.getContext("2d");
         this.drawer = new Drawer(this.ctx);
         this.event = new Event();
@@ -25,6 +32,8 @@ class Index {
         this.backgroundX = 0; // 添加背景位置追踪
         this.backgroundSpeed = 2; // 背景滚动速度
         this.init();
+        this.skills = new Skills(this.ctx);
+        this.statusBar = new StatusBar(this.ctx);
     }
 
     async init() {
@@ -112,7 +121,17 @@ class Index {
         this.event.updateEnemies(this.ctx, this.canvas, this.enemies, this.player);
         this.event.updateExplosions(this.ctx); // 更新爆炸效果
 
+        // 绘制技能图标
+        this.skills.draw();
+        this.statusBar.draw(this.player)
+
         requestAnimationFrame(() => this.gameLoop());
+    }
+
+    startGame() {
+        this.mainPage.style.display = 'none';
+        this.canvas.style.display = 'block';
+        this.init();
     }
 }
 

@@ -1,12 +1,12 @@
 /*
  * @Author: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
  * @Date: 2025-03-19 15:26:35
- * @LastEditors: error: error: git config user.name & please set dead value or install git && error: git config user.email & please set dead value or install git & please set dead value or install git
- * @LastEditTime: 2025-03-25 12:23:53
+ * @LastEditors: FirstsnowLucky firstsnow1119@163.com
+ * @LastEditTime: 2025-04-08 15:35:16
  * @FilePath: \canvas\Event.js
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
-import {Utils} from "./Utils.js";
+import { Utils } from "./Utils.js";
 import { Explosion } from './Explosion.js';
 
 export class Event {
@@ -14,6 +14,14 @@ export class Event {
     constructor() {
         this.utils = new Utils()
         this.explosions = []; // 存储爆炸效果
+        this.skills = {
+            q: { cooldown: 10000, lastUsed: 0, name: '墙壁销毁', progress: 0 },
+            w: { cooldown: 15000, lastUsed: 0, name: '分身', progress: 0 },
+            e: { cooldown: 8000, lastUsed: 0, name: '恢复血量', progress: 0 },
+            r: { cooldown: 12000, lastUsed: 0, name: '子弹强化', progress: 0 }
+        };
+        this.clones = [];
+        this.walls = [];
     }
 
     handleEnemyCollisionPlayer(player, enemy, flag) {
@@ -44,12 +52,125 @@ export class Event {
      * @param {KeyboardEvent} player - 控制玩家
      */
     handleKeyDown(e, keys, player) {
-        keys[e.key] = true; // 记录按下的键
-        if (e.key === ' ') {
-            player.shoot(); // 玩家发射子弹
+        keys[e.key] = true;
+        debugger
+        // 处理技能按键
+        if (['q', 'w', 'e', 'r'].includes(e.key.toLowerCase())) {
+            this.handleSkill(e.key.toLowerCase(), player);
         }
+        // 处理射击
+        else if (e.key === ' ') {
+            player.shoot();
+        }
+        // 处理移动
         this.updatePlayerVelocity(player, keys);
     }
+
+    handleSkill(key, player) {
+        const now = Date.now();
+        const skill = this.skills[key];
+        
+        if (skill && now - skill.lastUsed >= skill.cooldown) {
+            skill.lastUsed = now;
+            skill.progress = 1; // 设置冷却进度
+            
+            switch(key) {
+                case 'q':
+                    this.createWall(player);
+                    break;
+                case 'w':
+                    this.createClone(player);
+                    break;
+                case 'e':
+                    this.heal(player);
+                    break;
+                case 'r':
+                    this.enhanceBullets(player);
+                    break;
+            }
+        }
+    }
+
+    // 添加技能UI渲染方法
+    drawSkillUI(ctx) {
+        const padding = 10;
+        const skillSize = 50;
+        const startY = ctx.canvas.height - skillSize - padding;
+
+        Object.entries(this.skills).forEach(([key, skill], index) => {
+            const startX = padding + (skillSize + padding) * index;
+
+            // 绘制技能背景
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            ctx.fillRect(startX, startY, skillSize, skillSize);
+
+            // 绘制冷却遮罩
+            const now = Date.now();
+            const elapsed = now - skill.lastUsed;
+            const progress = Math.min(elapsed / skill.cooldown, 1);
+            skill.progress = 1 - progress;
+
+            if (skill.progress > 0) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                ctx.fillRect(startX, startY, skillSize, skillSize * skill.progress);
+
+                // 显示剩余冷却时间
+                if (skill.progress < 1) {
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '20px Arial';
+                    ctx.textAlign = 'center';
+                    const remainingSeconds = Math.ceil((skill.cooldown - elapsed) / 1000);
+                    ctx.fillText(remainingSeconds, startX + skillSize/2, startY + skillSize/2);
+                }
+            }
+
+            // 绘制技能按键
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 24px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText(key.toUpperCase(), startX + 5, startY + 25);
+
+            // 绘制技能名称
+            ctx.font = '12px Arial';
+            ctx.fillText(skill.name, startX + 5, startY + skillSize - 5);
+        });
+    }
+
+    enhanceBullets(player) {
+        // 实现子弹强化逻辑
+        player.bulletEnhanced = true;
+        setTimeout(() => {
+            player.bulletEnhanced = false;
+        }, 5000); // 持续5秒
+    }
+
+    createWall(player) {
+        this.walls.push({
+            x: player.x + player.width + 50,
+            y: 0,
+            width: 20,
+            height: window.innerHeight,
+            speed: 5
+        });
+    }
+
+    createClone(player) {
+        const clone = {
+            x: player.x + 50,
+            y: player.y,
+            width: player.width,
+            height: player.height,
+            image: player.image,
+            created: Date.now(),
+            duration: 5000
+        };
+        this.clones.push(clone);
+    }
+
+    heal(player) {
+        player.life = Math.min(3, player.life + 1);
+    }
+
 
     /**
      * 处理键盘松开事件
@@ -160,7 +281,7 @@ export class Event {
                 if (this.utils.checkCollision(bullet, player)) {
                     enemy.bullets.splice(index, 1);
                     // 玩家受伤逻辑
-                    const {life, score} = this.handleEnemyCollisionPlayer(player, enemy, false)
+                    const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, false)
                     console.log(life, score, 'life', 'score')
                     player.life = life <= 0 ? this.overGame() : life;
                     player.scope = score;
@@ -186,7 +307,7 @@ export class Event {
                     enemy.height // 传递敌人的高度
                 );
                 enemies.splice(index, 1);
-                const {life, score} = this.handleEnemyCollisionPlayer(player, enemy, true)
+                const { life, score } = this.handleEnemyCollisionPlayer(player, enemy, true)
                 player.life = life <= 0 ? this.overGame() : life;
                 player.scope = score;
             }

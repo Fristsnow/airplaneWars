@@ -12,9 +12,11 @@ export class Player extends GameElement {
         this.vx = 0; // 水平速度
         this.vy = 0; // 垂直速度
         this.image = new Image();
-        this.image.src = PLAYER_IMAGE_SRC; // 玩家的图片
+        this.image.src = PLAYER_IMAGE_SRC;
         this.angle = 0;
         this.life = 3;
+        this.energy = 100; // 初始能量值
+        this.score = 0;  // 初始化积分
         this.bullets = []; // 玩家子弹数组
         this.shotDelay = 300; // 射击冷却时间(ms)
         this.event = new Event();
